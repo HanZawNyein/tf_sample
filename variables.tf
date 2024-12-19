@@ -10,6 +10,10 @@ variable "aws_secret_key" {
   sensitive   = true  # Mark the secret key as sensitive
 }
 
+variable "ssh_public_key_path" {
+  type = string
+}
+
 variable "ssh_private_key_path" {
   type = string
 }

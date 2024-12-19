@@ -9,6 +9,7 @@ terraform init
 ```terraform
 aws_access_key       = "xxxx"
 aws_secret_key       = "xxxx"
+ssh_public_key_path = "~/.ssh/id_rsa.pub"
 ssh_private_key_path = "~/.ssh/id_rsa"
 ```
 

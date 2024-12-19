@@ -14,14 +14,22 @@ provider "aws" {
   secret_key = var.aws_secret_key
 }
 
+resource "aws_lightsail_key_pair" "deployer" {
+  name = "deployer-key"
+  public_key = file(var.ssh_public_key_path)
+}
+
 # Create Lightsail Instance
 resource "aws_lightsail_instance" "create_instance" {
-  name         = "ubuntu-24-2cpu-2gb-instance"
+  name      = "ubuntu-24-2cpu-2gb-instance"
   blueprint_id = "ubuntu_24_04"  # Blueprint ID for Ubuntu 24.04
-  bundle_id    = "small_2_0"     # Bundle ID for 2 CPUs and 2 GB of RAM
+  bundle_id = "small_2_0"     # Bundle ID for 2 CPUs and 2 GB of RAM
 
   # Optional: Set the availability zone (can be left out for automatic selection)
-  availability_zone = "us-east-1a"  # Optional: Set the availability zone
+  availability_zone = "ap-southeast-1a" # Singapore Availability Zone
+  key_pair_name = aws_lightsail_key_pair.deployer.name
+
+
 
   # Tags for identification
   tags = {
@@ -31,7 +39,8 @@ resource "aws_lightsail_instance" "create_instance" {
 
 # Install Docker on the Lightsail Instance
 resource "null_resource" "install_docker" {
-  depends_on = [aws_lightsail_instance.create_instance]  # Ensures that Docker is installed after the instance is created
+  depends_on = [aws_lightsail_instance.create_instance]
+  # Ensures that Docker is installed after the instance is created
 
   provisioner "remote-exec" {
     inline = [
@@ -52,7 +61,7 @@ resource "null_resource" "install_docker" {
       "sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin",
 
       # Create Docker group if it doesn't exist and add the user
-      "sudo groupadd docker || true",  # Ignore error if the group exists
+      "sudo groupadd docker || true", # Ignore error if the group exists
       "sudo usermod -aG docker ubuntu",
 
       # Ensure Docker starts automatically and is running
@@ -65,10 +74,10 @@ resource "null_resource" "install_docker" {
 
     # Connection details to the instance
     connection {
-      type        = "ssh"
-      host        = aws_lightsail_instance.create_instance.public_ip_address
-      user        = "ubuntu"
-      private_key = file(var.ssh_private_key_path)
+      type = "ssh"
+      host = aws_lightsail_instance.create_instance.public_ip_address
+      user = "ubuntu"
+      private_key = file(var.ssh_private_key_path) # Replace with your private key path
     }
   }
 }
