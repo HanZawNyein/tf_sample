@@ -14,8 +14,7 @@ provider "aws" {
   secret_key = var.aws_secret_key
 }
 
-
-# Create Lightsail Instance and Install Docker
+# Create Lightsail Instance
 resource "aws_lightsail_instance" "create_instance" {
   name         = "ubuntu-24-2cpu-2gb-instance"
   blueprint_id = "ubuntu_24_04"  # Blueprint ID for Ubuntu 24.04
@@ -28,8 +27,12 @@ resource "aws_lightsail_instance" "create_instance" {
   tags = {
     Name = "Ubuntu 24.04 Lightsail Instance"
   }
+}
 
-  # Provisioner to install Docker
+# Install Docker on the Lightsail Instance
+resource "null_resource" "install_docker" {
+  depends_on = [aws_lightsail_instance.create_instance]  # Ensures that Docker is installed after the instance is created
+
   provisioner "remote-exec" {
     inline = [
       # Update package list and install required packages for Docker
@@ -65,8 +68,7 @@ resource "aws_lightsail_instance" "create_instance" {
       type        = "ssh"
       host        = aws_lightsail_instance.create_instance.public_ip_address
       user        = "ubuntu"
-      private_key = file(var.ssh_private_key_path)  # Use the path to your private key
+      private_key = file(var.ssh_private_key_path)
     }
   }
 }
-
